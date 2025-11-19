@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-4831cdced7df083904c4573d6b35f1bf"}, "mark": {"type": "line", "color": "steelblue", "point": {"color": "steelblue", "size": 60}, "strokeWidth": 3}, "encoding": {"tooltip": [{"field": "A\u00f1o", "format": "d", "title": "A\u00f1o", "type": "quantitative"}, {"field": "Natalidad", "format": ".2f", "title": "Tasa de Natalidad", "type": "quantitative"}], "x": {"axis": {"format": "d"}, "field": "A\u00f1o", "title": "A\u00f1o", "type": "quantitative"}, "y": {"field": "Natalidad", "scale": {"zero": false}, "title": "Tasa de Natalidad (por 1000 habitantes)", "type": "quantitative"}}, "height": 400, "params": [{"name": "param_1", "select": {"type": "interval", "encodings": ["x", "y"]}, "bind": "scales"}], "title": "Evoluci\u00f3n Global de la Tasa de Natalidad", "width": 700, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-4831cdced7df083904c4573d6b35f1bf": [{"A\u00f1o": 2000, "Natalidad": 24.321390851703974}, {"A\u00f1o": 2001, "Natalidad": 23.897928528943357}, {"A\u00f1o": 2002, "Natalidad": 23.524185043182438}, {"A\u00f1o": 2003, "Natalidad": 23.26596840406034}, {"A\u00f1o": 2004, "Natalidad": 23.089193954156446}, {"A\u00f1o": 2005, "Natalidad": 22.896332387071222}, {"A\u00f1o": 2006, "Natalidad": 22.766527045611657}, {"A\u00f1o": 2007, "Natalidad": 22.69247510258477}, {"A\u00f1o": 2008, "Natalidad": 22.663586871959577}, {"A\u00f1o": 2009, "Natalidad": 22.51575091822216}, {"A\u00f1o": 2010, "Natalidad": 22.30740080155373}, {"A\u00f1o": 2011, "Natalidad": 22.091350239212478}, {"A\u00f1o": 2012, "Natalidad": 21.913373646650346}, {"A\u00f1o": 2013, "Natalidad": 21.518690824691337}, {"A\u00f1o": 2014, "Natalidad": 21.31093527908035}, {"A\u00f1o": 2015, "Natalidad": 20.897796111319078}, {"A\u00f1o": 2016, "Natalidad": 20.552017557383216}, {"A\u00f1o": 2017, "Natalidad": 20.047054031915177}, {"A\u00f1o": 2018, "Natalidad": 19.624904335201258}, {"A\u00f1o": 2019, "Natalidad": 19.24680068892766}, {"A\u00f1o": 2020, "Natalidad": 18.804544152837103}, {"A\u00f1o": 2021, "Natalidad": 18.535504178696243}, {"A\u00f1o": 2022, "Natalidad": 18.13000022421331}, {"A\u00f1o": 2023, "Natalidad": 17.805252548487832}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>

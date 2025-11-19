@@ -1,0 +1,26 @@
+# ============================================
+# REQUIREMENTS - Predicción de Natalidad Global
+# ============================================
+
+# Core Data Science
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# Streamlit y Visualización
+streamlit>=1.28.0
+altair>=5.0.0
+vega-datasets>=0.9.0
+plotly>=5.17.0
+
+# Utilidades
+joblib>=1.3.0
+
+#Opcional (si usas plotly en el futuro)
+plotly>=5.17.0
+
+# Para desarrollo local (comentar si despliegas)
+# ipykernel>=6.25.0
