@@ -15,7 +15,8 @@ from src.visualizations import (
     viz_dinamica_natalidad_vs_variable_region,
     viz_mapa_mundial_natalidad,
     viz_evolucion_paises_highlight,
-    viz_dinamica_natalidad_vs_variable,   
+    viz_dinamica_natalidad_vs_variable,
+    viz_correlaciones_interactivas,   
     get_available_visualizations
 )
 from src.model import (
@@ -342,6 +343,9 @@ elif pagina == "📊 Visualizaciones":
                     )
             elif viz_actual['id'] == 'dinamica_natalidad':
                 chart = viz_dinamica_natalidad_vs_variable(df)
+
+            elif viz_actual['id'] == 'correlaciones_interactivas':
+                chart = viz_correlaciones_interactivas(df)
 
             if chart is not None:
                 st.altair_chart(chart, use_container_width=True)

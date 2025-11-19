@@ -168,7 +168,7 @@ def viz_evolucion_temporal_regiones(df):
 
 
 # ============================================
-# VIZ 2: CORRELACIONES INTERACTIVAS
+# VIZ 2: NATALIDAD VS VARIABLE POR REGIÓN
 # ============================================
 
 def viz_dinamica_natalidad_vs_variable_region(df, variable_x, anio, usar_densidad=False, continentes_resaltados=None):
@@ -307,7 +307,198 @@ def viz_dinamica_natalidad_vs_variable_region(df, variable_x, anio, usar_densida
 
     return chart
 
-
+def viz_correlaciones_interactivas(df):
+    """
+    Visualización 2: Scatter plot interactivo de correlaciones
+    
+    Args:
+        df: DataFrame procesado
+        
+    Returns:
+        alt.Chart: Gráfico de Altair
+    """
+    # Variables socioeconómicas clave
+    variables_analisis = {
+        'EsperanzaVida': 'Esperanza de Vida (años)',
+        'PIB_per_capita': 'PIB per cápita (USD)',
+        'Urbanizacion': 'Urbanización (%)',
+        'GastoSalud': 'Gasto en Salud (% PIB)',
+        'AccesoEducacion': 'Acceso a Educación (%)',
+        'Desempleo': 'Desempleo (%)',
+        'AccesoAguaPotable': 'Acceso a Agua Potable (%)',
+        'MujeresParlamento': 'Mujeres en Parlamento (%)',
+    }
+    
+    # Filtrar solo variables disponibles
+    variables_disponibles = {
+        var: label for var, label in variables_analisis.items()
+        if var in df.columns
+    }
+    
+    # Preparar datos (últimos 5 años)
+    columnas_necesarias = ['Año', 'Pais', 'Natalidad', 'Continente'] + list(variables_disponibles.keys())
+    df_viz = df[columnas_necesarias].dropna(subset=['Natalidad'])
+    
+    año_max = df_viz['Año'].max()
+    df_viz = df_viz[df_viz['Año'] >= año_max - 4].copy()
+    
+    # Transformar a formato long
+    df_long = df_viz.melt(
+        id_vars=['Año', 'Pais', 'Natalidad', 'Continente'],
+        value_vars=list(variables_disponibles.keys()),
+        var_name='variable',
+        value_name='valor'
+    )
+    
+    # Limpiar datos
+    df_clean = df_long.replace([np.inf, -np.inf], np.nan)
+    df_clean = df_clean.dropna(subset=['valor', 'Natalidad'])
+    
+    # Calcular correlaciones (compatible con pandas antiguo)
+    def calc_corr(g):
+        return g['valor'].corr(g['Natalidad'])
+    
+    df_corr = df_clean.groupby('variable').apply(calc_corr).reset_index(name='correlation')
+    
+    # Calcular líneas de regresión
+    def get_reg_line(g):
+        m, b = np.polyfit(g['valor'], g['Natalidad'], 1)
+        x_min, x_max = g['valor'].min(), g['valor'].max()
+        return pd.DataFrame({
+            'valor': [x_min, x_max],
+            'Natalidad_pred': [m * x_min + b, m * x_max + b]
+        })
+    
+    df_reg_lines = df_clean.groupby('variable').apply(get_reg_line).reset_index(drop=True)
+    
+    # Selectores
+    variable_input = alt.binding_select(
+        options=list(variables_disponibles.keys()),
+        name='Variable a comparar: '
+    )
+    
+    variable_selection = alt.selection_point(
+        fields=['variable'],
+        bind=variable_input,
+        value=list(variables_disponibles.keys())[0]
+    )
+    
+    selector_continente = alt.selection_point(
+        fields=['Continente'],
+        bind='legend',
+        on='click'
+    )
+    
+    color_scale = alt.Scale(
+        domain=['África', 'América', 'Asia', 'Europa', 'Oceanía'],
+        range=['#e74c3c', '#3498db', '#f39c12', '#2ecc71', '#9b59b6']
+    )
+    
+    # Scatter plot
+    scatter = alt.Chart(df_clean).mark_circle(
+        size=100,
+        opacity=0.7
+    ).encode(
+        x=alt.X('valor:Q',
+                scale=alt.Scale(zero=False),
+                axis=alt.Axis(
+                    titleFontSize=13,
+                    titleFontWeight='bold',
+                    labelFontSize=11
+                )),
+        y=alt.Y('Natalidad:Q',
+                scale=alt.Scale(zero=False),
+                axis=alt.Axis(
+                    title='Natalidad (nacimientos por 1000 hab)',
+                    titleFontSize=13,
+                    titleFontWeight='bold',
+                    labelFontSize=11
+                )),
+        color=alt.condition(
+            selector_continente,
+            alt.Color('Continente:N',
+                      scale=color_scale,
+                      legend=alt.Legend(
+                          title='Continente (click para filtrar)',
+                          titleFontSize=12,
+                          titleFontWeight='bold',
+                          labelFontSize=11,
+                          orient='right'
+                      )),
+            alt.value('lightgray')
+        ),
+        opacity=alt.condition(selector_continente, alt.value(0.8), alt.value(0.1)),
+        tooltip=[
+            alt.Tooltip('Pais:N', title='País'),
+            alt.Tooltip('Continente:N', title='Continente'),
+            alt.Tooltip('Año:O', title='Año'),
+            alt.Tooltip('Natalidad:Q', title='Natalidad', format='.2f'),
+            alt.Tooltip('valor:Q', title='Valor Variable', format='.2f')
+        ]
+    ).add_params(
+        variable_selection,
+        selector_continente
+    ).transform_filter(
+        variable_selection
+    )
+    
+    # Línea de regresión
+    regression = alt.Chart(df_reg_lines).mark_line(
+        color='white',
+        strokeWidth=3,
+        strokeDash=[5, 5]
+    ).encode(
+        x=alt.X('valor:Q'),
+        y=alt.Y('Natalidad_pred:Q', title='Natalidad')
+    ).add_params(
+        variable_selection
+    ).transform_filter(
+        variable_selection
+    )
+    
+    # Texto de correlación
+    correlation_text = alt.Chart(df_corr).mark_text(
+        align='left',
+        baseline='top',
+        dx=10,
+        dy=10,
+        fontSize=14,
+        fontWeight='bold',
+        color='darkred'
+    ).transform_filter(
+        variable_selection
+    ).transform_calculate(
+        correlation_label='"Correlación: " + format(datum.correlation, ".3f")'
+    ).encode(
+        text='correlation_label:N',
+        x=alt.value(10),
+        y=alt.value(10)
+    )
+    
+    # Combinar
+    chart = (scatter + regression + correlation_text).properties(
+        width=1080,
+        height=720,
+        title={
+            'text': 'Explorador de Correlaciones: Variables vs Natalidad',
+            'subtitle': [
+                'Selecciona una variable para explorar su relación con la natalidad',
+                'Click para filtrar por continente | Línea Negra: tendencia lineal'
+            ],
+            'fontSize': 16,
+            'fontWeight': 'bold',
+            'anchor': 'start',
+            'subtitleFontSize': 11,
+            'subtitleColor': 'gray'
+        }
+    ).configure_axis(
+        gridColor='lightgray',
+        gridOpacity=0.5
+    ).configure_view(
+        strokeWidth=0
+    ).interactive()
+    
+    return chart
 
 # ============================================
 # VIZ 3: MAPA MUNDIAL CON SLIDER (CORREGIDO)
@@ -886,7 +1077,6 @@ def viz_dinamica_natalidad_vs_variable(df):
     return final_chart
 
 
-
 # ============================================
 # UTILIDADES
 # ============================================
@@ -923,6 +1113,13 @@ def get_available_visualizations():
             "nombre": "Evolución de Natalidad por País",
             "descripcion": "Serie de tiempo de la natalidad de varios países con highlight interactivo.",
             "funcion": viz_evolucion_paises_highlight,
+        },
+        {            
+            "id": "correlaciones_interactivas",
+            "nombre": "Correlaciones Interactivas por Región",
+            "descripcion": "Correlaciones interactivas por región a través de los años",
+            "funcion": viz_correlaciones_interactivas,
+
         },
     ]
 
